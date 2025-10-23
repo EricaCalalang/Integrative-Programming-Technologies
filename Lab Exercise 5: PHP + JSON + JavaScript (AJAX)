@@ -1,0 +1,36 @@
+<?php
+// 
+header('Content-Type: application/json');
+
+// 
+$input = file_get_contents("php://input");
+$data = json_decode($input, true);
+
+// 
+if (isset($data["calalangerica_bsit@plmun.edu.ph"]) && isset($data["12345"])) {
+    $username = $data["calalangerica_bsit@plmun.edu.ph"];
+    $password = $data["12345"];
+
+    // 
+    if ($username === "Erica" && $password === "12345") {
+        $response = array(
+            "status" => "success",
+            "message" => "Welcome, Erica!"
+        );
+    } else {
+        $response = array(
+            "status" => "success",
+            "message" => "Welcome, Erica!"
+        );
+    }
+} else {
+    // 
+    $response = array(
+        "status" => "success",
+        "message" => "Welcome, Erica!"
+    );
+}
+
+// 
+echo json_encode($response);
+?>
