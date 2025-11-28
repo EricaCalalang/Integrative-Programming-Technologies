@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vehicle Service & Maintenance Log</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f0f2f5;
+        padding: 20px;
+        margin: 0;
+    }
+    .container {
+        max-width: 900px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #ccc;
+    }
+    h1, h2 {
+        text-align: center;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    button {
+        padding: 10px 15px;
+        margin: 5px;
+        border: none;
+        background: #007bff;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    button:hover { background: #0056b3; }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    table, th, td {
+        border: 1px solid #999;
+    }
+    th, td {
+        padding: 10px;
+        text-align: center;
+    }
+    .section {
+        display: none;
+    }
+    .active {
+        display: block;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Vehicle Service & Maintenance Log</h1>
+
+    <!-- Navigation Buttons -->
+    <div style="text-align:center;">
+        <button onclick="showSection('home')">Home</button>
+        <button onclick="showSection('addVehicle')">Add Vehicle</button>
+        <button onclick="showSection('vehicleList')">Vehicle List</button>
+        <button onclick="showSection('serviceLog')">Service Log</button>
+    </div>
+
+    <!-- HOME -->
+    <div id="home" class="section active">
+        <h2>Welcome!</h2>
+        <p>This system helps track vehicle details and service/maintenance records.</p>
+    </div>
+
+    <!-- ADD VEHICLE -->
+    <div id="addVehicle" class="section">
+        <h2>Add Vehicle</h2>
+        <input id="plate" placeholder="Plate Number">
+        <input id="model" placeholder="Model">
+        <input id="owner" placeholder="Owner Name">
+        <button onclick="saveVehicle()">Save Vehicle</button>
+    </div>
+
+    <!-- VEHICLE LIST -->
+    <div id="vehicleList" class="section">
+        <h2>List of Vehicles</h2>
+        <table id="vehicleTable">
+            <tr>
+                <th>Plate Number</th>
+                <th>Model</th>
+                <th>Owner</th>
+            </tr>
+        </table>
+    </div>
+
+    <!-- SERVICE LOG -->
+    <div id="serviceLog" class="section">
+        <h2>Add Service Record</h2>
+
+        <select id="vehicleSelect"></select>
+        <input id="serviceType" placeholder="Service Type (e.g., Oil Change)">
+        <input id="date" type="date">
+        <input id="mileage" type="number" placeholder="Mileage">
+        <textarea id="notes" placeholder="Notes"></textarea>
+
+        <button onclick="addService()">Save Service Record</button>
+
+        <h2>Service History</h2>
+        <table id="serviceTable">
+            <tr>
+                <th>Vehicle</th>
+                <th>Service Type</th>
+                <th>Date</th>
+                <th>Mileage</th>
+                <th>Notes</th>
+                <th>Action</th>
+            </tr>
+        </table>
+    </div>
+
+</div>
+
+<script>
+// ------------------- Section Navigation ----------------------
+function showSection(sectionId) {
+    document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+    document.getElementById(sectionId).classList.add("active");
+
+    if (sectionId === "vehicleList") loadVehicles();
+    if (sectionId === "serviceLog") loadVehicleDropdown(), loadServiceLogs();
+}
+
+// ------------------- Vehicle Storage -------------------------
+function saveVehicle() {
+    let plate = document.getElementById("plate").value;
+    let model = document.getElementById("model").value;
+    let owner = document.getElementById("owner").value;
+
+    if (!plate || !model || !owner) return alert("Complete all fields!");
+
+    let vehicles = JSON.parse(localStorage.getItem("vehicles")) || [];
+    vehicles.push({ plate, model, owner });
+
+    localStorage.setItem("vehicles", JSON.stringify(vehicles));
+
+    alert("Vehicle added!");
+    document.getElementById("plate").value = "";
+    document.getElementById("model").value = "";
+    document.getElementById("owner").value = "";
+}
+
+function loadVehicles() {
+    let vehicles = JSON.parse(localStorage.getItem("vehicles")) || [];
+    let table = document.getElementById("vehicleTable");
+
+    table.innerHTML = `
+        <tr>
+            <th>Plate Number</th>
+            <th>Model</th>
+            <th>Owner</th>
+        </tr>
+    `;
+
+    vehicles.forEach(v => {
+        let row = `
+            <tr>
+                <td>${v.plate}</td>
+                <td>${v.model}</td>
+                <td>${v.owner}</td>
+            </tr>
+        `;
+        table.innerHTML += row;
+    });
+}
+
+function loadVehicleDropdown() {
+    let vehicles = JSON.parse(localStorage.getItem("vehicles")) || [];
+    let dropdown = document.getElementById("vehicleSelect");
+
+    dropdown.innerHTML = "";
+
+    vehicles.forEach((v, index) => {
+        dropdown.innerHTML += <option value="${index}">${v.plate} - ${v.model}</option>;
+    });
+}
+
+// ------------------- Service Logs ----------------------------
+function addService() {
+    let vehicleIndex = document.getElementById("vehicleSelect").value;
+    let serviceType = document.getElementById("serviceType").value;
+    let date = document.getElementById("date").value;
+    let mileage = document.getElementById("mileage").value;
+    let notes = document.getElementById("notes").value;
+
+    if (!serviceType || !date || !mileage) return alert("Fill required fields!");
+
+    let vehicles = JSON.parse(localStorage.getItem("vehicles")) || [];
+    let logs = JSON.parse(localStorage.getItem("serviceLogs")) || [];
+
+    logs.push({
+        vehicle: vehicles[vehicleIndex].plate,
+        serviceType,
+        date,
+        mileage,
+        notes
+    });
+
+    localStorage.setItem("serviceLogs", JSON.stringify(logs));
+
+    alert("Service record added!");
+
+    document.getElementById("serviceType").value = "";
+    document.getElementById("date").value = "";
+    document.getElementById("mileage").value = "";
+    document.getElementById("notes").value = "";
+
+    loadServiceLogs();
+}
+
+function loadServiceLogs() {
+    let logs = JSON.parse(localStorage.getItem("serviceLogs")) || [];
+    let table = document.getElementById("serviceTable");
+
+    table.innerHTML = `
+        <tr>
+            <th>Vehicle</th>
+            <th>Service Type</th>
+            <th>Date</th>
+            <th>Mileage</th>
+            <th>Notes</th>
+            <th>Action</th>
+        </tr>
+    `;
+
+    logs.forEach((log, index) => {
+        table.innerHTML += `
+            <tr>
+                <td>${log.vehicle}</td>
+                <td>${log.serviceType}</td>
+                <td>${log.date}</td>
+                <td>${log.mileage}</td>
+                <td>${log.notes}</td>
+                <td><button onclick="deleteLog(${index})">Delete</button></td>
+            </tr>
+        `;
+    });
+}
+
+function deleteLog(index) {
+    let logs = JSON.parse(localStorage.getItem("serviceLogs")) || [];
+    logs.splice(index, 1);
+    localStorage.setItem("serviceLogs", JSON.stringify(logs));
+    loadServiceLogs();
+}
+
+</script>
+
+</body>
+</html>
